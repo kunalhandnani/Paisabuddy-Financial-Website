@@ -2,48 +2,36 @@ import { useState } from 'react';
 import { ArrowRight, Landmark } from 'lucide-react';
 
 interface LoginProps {
-  onLogin: (name: string, email: string, password: string) => Promise<void>;
-  onRegister: (name: string, email: string, password: string) => Promise<void>;
-  isLoading: boolean;
-  error: string;
-  successMessage: string;
+  onEnter: (name: string, email: string) => void;
 }
 
 type AuthMode = 'login' | 'signup';
 
-export function Login({ onLogin, onRegister, isLoading, error, successMessage }: LoginProps) {
+function isValidEmail(email: string) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+export function Login({ onEnter }: LoginProps) {
   const [mode, setMode] = useState<AuthMode>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [localError, setLocalError] = useState('');
 
-  async function handleSubmit(event: React.FormEvent) {
+  function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setLocalError('');
 
-    if (!name || !email || !password) {
-      setLocalError('Please fill all required fields.');
+    if (!name.trim() || !email.trim()) {
+      setLocalError('Please enter your name and email.');
       return;
     }
 
-    if (mode === 'signup') {
-      if (password.length < 6) {
-        setLocalError('Password must be at least 6 characters long.');
-        return;
-      }
-
-      if (password !== confirmPassword) {
-        setLocalError('Confirm password must match password.');
-        return;
-      }
-
-      await onRegister(name, email, password);
+    if (!isValidEmail(email.trim())) {
+      setLocalError('Please enter a valid email address.');
       return;
     }
 
-    await onLogin(name, email, password);
+    onEnter(name, email);
   }
 
   return (
@@ -78,7 +66,7 @@ export function Login({ onLogin, onRegister, isLoading, error, successMessage }:
               {mode === 'login' ? 'Login to your account' : 'Create your account'}
             </h2>
             <p className="mt-2 text-sm text-slate-500">
-              Register once with your name and a valid email, then log in any time using the same details.
+              Enter any name and valid email to continue into your dashboard.
             </p>
           </div>
 
@@ -142,48 +130,13 @@ export function Login({ onLogin, onRegister, isLoading, error, successMessage }:
               />
             </div>
 
-            <div>
-              <label htmlFor="password" className="mb-2 block text-sm font-medium text-slate-700">
-                Password
-              </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="Enter password"
-                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white"
-                required
-              />
-            </div>
-
-            {mode === 'signup' ? (
-              <div>
-                <label htmlFor="confirmPassword" className="mb-2 block text-sm font-medium text-slate-700">
-                  Confirm password
-                </label>
-                <input
-                  id="confirmPassword"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(event) => setConfirmPassword(event.target.value)}
-                  placeholder="Confirm password"
-                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white"
-                  required
-                />
-              </div>
-            ) : null}
-
-            {error ? <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</p> : null}
             {localError ? <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{localError}</p> : null}
-            {successMessage ? <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{successMessage}</p> : null}
 
             <button
               type="submit"
-              disabled={isLoading}
-              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-300"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700"
             >
-              {isLoading ? (mode === 'login' ? 'Signing in...' : 'Creating account...') : mode === 'login' ? 'Login' : 'Signup'}
+              {mode === 'login' ? 'Login' : 'Signup'}
               <ArrowRight size={16} />
             </button>
           </form>

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Calculator, Home, LogOut, TrendingUp, Wallet } from 'lucide-react';
-import { api } from './lib/api';
 import { Dashboard } from './components/Dashboard';
 import { Investments } from './components/Investments';
 import { Login } from './components/Login';
@@ -22,9 +21,6 @@ const storageKey = 'paisabuddy_user';
 export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('home');
-  const [loginError, setLoginError] = useState('');
-  const [authSuccessMessage, setAuthSuccessMessage] = useState('');
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(storageKey);
@@ -39,54 +35,25 @@ export default function App() {
     }
   }, []);
 
-  async function handleLogin(name: string, email: string, password: string) {
-    setIsLoggingIn(true);
-    setLoginError('');
-    setAuthSuccessMessage('');
+  function handleEnterSite(name: string, email: string) {
+    const localUser = {
+      id: email.trim().toLowerCase(),
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+    };
 
-    try {
-      const response = await api.post<{ user: User }>('/auth/login', { name, email, password });
-      setUser(response.user);
-      window.localStorage.setItem(storageKey, JSON.stringify(response.user));
-    } catch (error) {
-      setLoginError(error instanceof Error ? error.message : 'Unable to login.');
-    } finally {
-      setIsLoggingIn(false);
-    }
-  }
-
-  async function handleRegister(name: string, email: string, password: string) {
-    setIsLoggingIn(true);
-    setLoginError('');
-    setAuthSuccessMessage('');
-
-    try {
-      await api.post<{ user: User }>('/auth/register', { name, email, password });
-      setAuthSuccessMessage('Registration successful. You can now log in with the same name and email.');
-    } catch (error) {
-      setLoginError(error instanceof Error ? error.message : 'Unable to register.');
-    } finally {
-      setIsLoggingIn(false);
-    }
+    setUser(localUser);
+    window.localStorage.setItem(storageKey, JSON.stringify(localUser));
   }
 
   function handleLogout() {
     setUser(null);
     setActiveTab('home');
-    setAuthSuccessMessage('');
     window.localStorage.removeItem(storageKey);
   }
 
   if (!user) {
-    return (
-      <Login
-        onLogin={handleLogin}
-        onRegister={handleRegister}
-        isLoading={isLoggingIn}
-        error={loginError}
-        successMessage={authSuccessMessage}
-      />
-    );
+    return <Login onEnter={handleEnterSite} />;
   }
 
   return (
