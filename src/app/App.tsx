@@ -39,13 +39,13 @@ export default function App() {
     }
   }, []);
 
-  async function handleLogin(name: string, email: string) {
+  async function handleLogin(name: string, email: string, password: string) {
     setIsLoggingIn(true);
     setLoginError('');
     setAuthSuccessMessage('');
 
     try {
-      const response = await api.post<{ user: User }>('/auth/login', { name, email });
+      const response = await api.post<{ user: User }>('/auth/login', { name, email, password });
       setUser(response.user);
       window.localStorage.setItem(storageKey, JSON.stringify(response.user));
     } catch (error) {
@@ -55,13 +55,13 @@ export default function App() {
     }
   }
 
-  async function handleRegister(name: string, email: string) {
+  async function handleRegister(name: string, email: string, password: string) {
     setIsLoggingIn(true);
     setLoginError('');
     setAuthSuccessMessage('');
 
     try {
-      await api.post<{ user: User }>('/auth/register', { name, email });
+      await api.post<{ user: User }>('/auth/register', { name, email, password });
       setAuthSuccessMessage('Registration successful. You can now log in with the same name and email.');
     } catch (error) {
       setLoginError(error instanceof Error ? error.message : 'Unable to register.');

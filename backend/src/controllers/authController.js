@@ -1,4 +1,5 @@
 import { User } from '../models/User.js';
+import bcrypt from 'bcryptjs';
 
 function mapUser(user) {
   return {
@@ -16,19 +17,24 @@ function normalizeCredentials(body) {
   return {
     name: String(body.name || '').trim(),
     email: String(body.email || '').trim().toLowerCase(),
+    password: String(body.password || ''),
   };
 }
 
 export async function registerUser(req, res) {
   try {
-    const { name, email } = normalizeCredentials(req.body);
+    const { name, email, password } = normalizeCredentials(req.body);
 
-    if (!name || !email) {
-      return res.status(400).json({ message: 'Name and email are required.' });
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Name, email, and password are required.' });
     }
 
     if (!isValidEmail(email)) {
       return res.status(400).json({ message: 'Please enter a valid email address.' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters long.' });
     }
 
     const existingUser = await User.findOne({ email });
@@ -36,7 +42,8 @@ export async function registerUser(req, res) {
       return res.status(409).json({ message: 'This email is already registered. Please log in.' });
     }
 
-    const user = await User.create({ name, email });
+    const passwordHash = await bcrypt.hash(password, 10);
+    const user = await User.create({ name, email, passwordHash });
     return res.status(201).json({ user: mapUser(user) });
   } catch (error) {
     console.error(error);
@@ -46,10 +53,10 @@ export async function registerUser(req, res) {
 
 export async function loginUser(req, res) {
   try {
-    const { name, email } = normalizeCredentials(req.body);
+    const { name, email, password } = normalizeCredentials(req.body);
 
-    if (!name || !email) {
-      return res.status(400).json({ message: 'Name and email are required.' });
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Name, email, and password are required.' });
     }
 
     if (!isValidEmail(email)) {
@@ -63,6 +70,11 @@ export async function loginUser(req, res) {
 
     if (user.name.trim().toLowerCase() !== name.toLowerCase()) {
       return res.status(401).json({ message: 'Name does not match the registered account.' });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Incorrect password.' });
     }
 
     return res.json({ user: mapUser(user) });

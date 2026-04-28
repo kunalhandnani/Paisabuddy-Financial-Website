@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { ArrowRight, Landmark } from 'lucide-react';
 
 interface LoginProps {
-  onLogin: (name: string, email: string) => Promise<void>;
-  onRegister: (name: string, email: string) => Promise<void>;
+  onLogin: (name: string, email: string, password: string) => Promise<void>;
+  onRegister: (name: string, email: string, password: string) => Promise<void>;
   isLoading: boolean;
   error: string;
   successMessage: string;
@@ -15,19 +15,35 @@ export function Login({ onLogin, onRegister, isLoading, error, successMessage }:
   const [mode, setMode] = useState<AuthMode>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [localError, setLocalError] = useState('');
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (!name || !email) {
+    setLocalError('');
+
+    if (!name || !email || !password) {
+      setLocalError('Please fill all required fields.');
       return;
     }
 
     if (mode === 'signup') {
-      await onRegister(name, email);
+      if (password.length < 6) {
+        setLocalError('Password must be at least 6 characters long.');
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        setLocalError('Confirm password must match password.');
+        return;
+      }
+
+      await onRegister(name, email, password);
       return;
     }
 
-    await onLogin(name, email);
+    await onLogin(name, email, password);
   }
 
   return (
@@ -71,7 +87,10 @@ export function Login({ onLogin, onRegister, isLoading, error, successMessage }:
               <div className="grid grid-cols-2 gap-1">
                 <button
                   type="button"
-                  onClick={() => setMode('login')}
+                  onClick={() => {
+                    setMode('login');
+                    setLocalError('');
+                  }}
                   className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
                     mode === 'login' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
                   }`}
@@ -80,7 +99,10 @@ export function Login({ onLogin, onRegister, isLoading, error, successMessage }:
                 </button>
                 <button
                   type="button"
-                  onClick={() => setMode('signup')}
+                  onClick={() => {
+                    setMode('signup');
+                    setLocalError('');
+                  }}
                   className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
                     mode === 'signup' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'
                   }`}
@@ -120,7 +142,40 @@ export function Login({ onLogin, onRegister, isLoading, error, successMessage }:
               />
             </div>
 
+            <div>
+              <label htmlFor="password" className="mb-2 block text-sm font-medium text-slate-700">
+                Password
+              </label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                placeholder="Enter password"
+                className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white"
+                required
+              />
+            </div>
+
+            {mode === 'signup' ? (
+              <div>
+                <label htmlFor="confirmPassword" className="mb-2 block text-sm font-medium text-slate-700">
+                  Confirm password
+                </label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  placeholder="Confirm password"
+                  className="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-emerald-500 focus:bg-white"
+                  required
+                />
+              </div>
+            ) : null}
+
             {error ? <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</p> : null}
+            {localError ? <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{localError}</p> : null}
             {successMessage ? <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{successMessage}</p> : null}
 
             <button
