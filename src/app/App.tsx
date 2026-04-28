@@ -23,6 +23,7 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('home');
   const [loginError, setLoginError] = useState('');
+  const [authSuccessMessage, setAuthSuccessMessage] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   useEffect(() => {
@@ -41,6 +42,7 @@ export default function App() {
   async function handleLogin(name: string, email: string) {
     setIsLoggingIn(true);
     setLoginError('');
+    setAuthSuccessMessage('');
 
     try {
       const response = await api.post<{ user: User }>('/auth/login', { name, email });
@@ -53,14 +55,38 @@ export default function App() {
     }
   }
 
+  async function handleRegister(name: string, email: string) {
+    setIsLoggingIn(true);
+    setLoginError('');
+    setAuthSuccessMessage('');
+
+    try {
+      await api.post<{ user: User }>('/auth/register', { name, email });
+      setAuthSuccessMessage('Registration successful. You can now log in with the same name and email.');
+    } catch (error) {
+      setLoginError(error instanceof Error ? error.message : 'Unable to register.');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  }
+
   function handleLogout() {
     setUser(null);
     setActiveTab('home');
+    setAuthSuccessMessage('');
     window.localStorage.removeItem(storageKey);
   }
 
   if (!user) {
-    return <Login onLogin={handleLogin} isLoading={isLoggingIn} error={loginError} />;
+    return (
+      <Login
+        onLogin={handleLogin}
+        onRegister={handleRegister}
+        isLoading={isLoggingIn}
+        error={loginError}
+        successMessage={authSuccessMessage}
+      />
+    );
   }
 
   return (

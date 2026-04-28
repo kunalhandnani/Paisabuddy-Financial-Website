@@ -3,17 +3,27 @@ import { ArrowRight, Landmark } from 'lucide-react';
 
 interface LoginProps {
   onLogin: (name: string, email: string) => Promise<void>;
+  onRegister: (name: string, email: string) => Promise<void>;
   isLoading: boolean;
   error: string;
+  successMessage: string;
 }
 
-export function Login({ onLogin, isLoading, error }: LoginProps) {
+type AuthMode = 'login' | 'signup';
+
+export function Login({ onLogin, onRegister, isLoading, error, successMessage }: LoginProps) {
+  const [mode, setMode] = useState<AuthMode>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!name || !email) {
+      return;
+    }
+
+    if (mode === 'signup') {
+      await onRegister(name, email);
       return;
     }
 
@@ -48,11 +58,38 @@ export function Login({ onLogin, isLoading, error }: LoginProps) {
         <section className="p-8 md:p-12">
           <div className="mb-8">
             <p className="text-sm font-medium uppercase tracking-[0.22em] text-emerald-700">Welcome</p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">Start your dashboard</h2>
-            <p className="mt-2 text-sm text-slate-500">We use your name and email to create a lightweight profile in MongoDB.</p>
+            <h2 className="mt-3 text-3xl font-semibold tracking-tight text-slate-900">
+              {mode === 'login' ? 'Login to your account' : 'Create your account'}
+            </h2>
+            <p className="mt-2 text-sm text-slate-500">
+              Register once with your name and a valid email, then log in any time using the same details.
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="rounded-2xl border border-slate-200 bg-slate-100 p-1">
+              <div className="grid grid-cols-2 gap-1">
+                <button
+                  type="button"
+                  onClick={() => setMode('login')}
+                  className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                    mode === 'login' ? 'bg-white text-emerald-700 shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Login
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('signup')}
+                  className={`rounded-xl px-4 py-2 text-sm font-semibold transition ${
+                    mode === 'signup' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  Signup
+                </button>
+              </div>
+            </div>
+
             <div>
               <label htmlFor="name" className="mb-2 block text-sm font-medium text-slate-700">
                 Full name
@@ -84,13 +121,14 @@ export function Login({ onLogin, isLoading, error }: LoginProps) {
             </div>
 
             {error ? <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-600">{error}</p> : null}
+            {successMessage ? <p className="rounded-2xl bg-emerald-50 px-4 py-3 text-sm text-emerald-700">{successMessage}</p> : null}
 
             <button
               type="submit"
               disabled={isLoading}
               className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:bg-emerald-300"
             >
-              {isLoading ? 'Signing in...' : 'Enter PaisaBuddy'}
+              {isLoading ? (mode === 'login' ? 'Signing in...' : 'Creating account...') : mode === 'login' ? 'Login' : 'Signup'}
               <ArrowRight size={16} />
             </button>
           </form>
