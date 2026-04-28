@@ -33,7 +33,7 @@ PaisaBuddy is now structured as a simple MERN application:
 |   |   `-- types.ts
 |   `-- styles/
 |-- .env.example
-|-- requirements.txt
+|-- vercel.json
 |-- package.json
 `-- vite.config.ts
 ```
@@ -71,6 +71,20 @@ Frontend:
 Backend health check:
 
 - [http://localhost:5000/api/health](http://localhost:5000/api/health)
+
+## Vercel deployment
+
+The root app is configured for Vercel as a Vite frontend using [vercel.json](/E:/Paisabuddy%20Financial%20Website/vercel.json).
+
+- Build command: `npm run build`
+- Output directory: `dist`
+- SPA rewrites are enabled so client-side routing works after refresh
+
+Important:
+
+- `requirements.txt` was intentionally removed because it caused Vercel to mis-detect the repo as a Python project.
+- The existing Express + MongoDB backend is not automatically deployed by this Vercel frontend setup.
+- If you want the full MERN app online, deploy `backend/` separately on a Node host such as Render, Railway, or a Vercel serverless/API rewrite migration.
 
 ## Features
 
